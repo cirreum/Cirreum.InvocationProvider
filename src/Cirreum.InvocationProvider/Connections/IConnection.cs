@@ -1,0 +1,60 @@
+namespace Cirreum.Invocation.Connections;
+
+using System.Security.Claims;
+
+/// <summary>
+/// Per-connection state for a long-lived inbound connection that hosts many invocations.
+/// Lifetime: from connection upgrade through disconnect. Set on
+/// <see cref="IInvocationContext.Connection"/> for invocations from long-lived sources
+/// (SignalR, raw WebSocket, gRPC streaming); <see langword="null"/> for stateless sources
+/// (HTTP, gRPC unary, queue handlers).
+/// </summary>
+/// <remarks>
+/// Describes the actual transport-layer connection — the persistent socket through which
+/// many invocations arrive. The connection itself is not an invocation; it's the carrier
+/// across which invocations are delivered. Each invocation on the connection gets its own
+/// <see cref="IInvocationContext"/> with this <see cref="IConnection"/> attached.
+/// </remarks>
+public interface IConnection {
+
+	/// <summary>Unique identifier assigned by the source adapter at upgrade.</summary>
+	/// <remarks>
+	/// Adapter-assigned, unique per running server, stable for connection lifetime.
+	/// Used as the key in the per-server connection registry.
+	/// </remarks>
+	string ConnectionId { get; }
+
+	/// <summary>The authenticated principal resolved at upgrade. Immutable post-upgrade.</summary>
+	ClaimsPrincipal User { get; }
+
+	/// <summary>UTC timestamp of upgrade.</summary>
+	DateTimeOffset ConnectedAtUtc { get; }
+
+	/// <summary>
+	/// Per-connection bag for ambient state with whole-connection lifetime
+	/// (cached <c>IUserState</c>, ApplicationUserCache that should outlive a single
+	/// invocation, application-defined connection-scoped state).
+	/// </summary>
+	/// <remarks>
+	/// <strong>Distinct from</strong> <see cref="IInvocationContext.Items"/> — which is
+	/// per-invocation. Slots placed here outlive individual invocations on the same
+	/// connection.
+	/// </remarks>
+	IDictionary<object, object?> Items { get; }
+
+	/// <summary>
+	/// Identifier of the source that produced this connection (e.g.
+	/// <see cref="InvocationSources.SignalR"/>). Same value as
+	/// <see cref="IInvocationContext.InvocationSource"/> for invocations on this
+	/// connection.
+	/// </summary>
+	string InvocationSource { get; }
+
+	/// <summary>
+	/// Cancellation tied to the connection's lifetime; fires on disconnect. Linked
+	/// into each invocation's <see cref="IInvocationContext.Aborted"/> so disposing
+	/// the connection cancels in-flight work.
+	/// </summary>
+	CancellationToken Aborted { get; }
+
+}

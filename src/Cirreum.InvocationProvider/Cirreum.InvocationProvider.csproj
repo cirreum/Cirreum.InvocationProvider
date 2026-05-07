@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<Description>The Cirreum Invocation Provider framework library — base registrar, configuration types, and the unified IInvocationContext seam shared by inbound invocation sources (HTTP, SignalR, raw WebSockets, gRPC) integrated into the Cirreum framework spine.</Description>
+		<PackageTags>cirreum;invocation;source;dispatch;providers</PackageTags>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<FrameworkReference Include="Microsoft.AspNetCore.App" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Cirreum.Providers" Version="1.1.1" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Using Include="Cirreum.Providers" />
+	</ItemGroup>
+
+</Project>
