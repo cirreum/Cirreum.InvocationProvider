@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-05-07
+
 ### Added
 
 Initial release of the Cirreum Invocation Provider abstractions library — the L2 Core "server-side foundation" peer to `Cirreum.Core` (which holds the cross-host identity/operation chain). Together they form the L2 Core layer that the spine and provider tracks build upon. Anchored by [ADR-0002](https://github.com/cirreum/Cirreum.DevOps/blob/main/docs/adr/0002-unified-invocation-context.md).

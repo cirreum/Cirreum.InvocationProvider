@@ -10,6 +10,7 @@
   </Folder>
   <Folder Name="/docs/">
     <File Path="docs/CHANGELOG.md" />
+    <File Path="docs/RELEASE-NOTES-v1.0.0.md" />
     <File Path="README.md" />
   </Folder>
   <Folder Name="/publish/">
