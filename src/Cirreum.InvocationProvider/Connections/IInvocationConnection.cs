@@ -13,9 +13,9 @@ using System.Security.Claims;
 /// Describes the actual transport-layer connection — the persistent socket through which
 /// many invocations arrive. The connection itself is not an invocation; it's the carrier
 /// across which invocations are delivered. Each invocation on the connection gets its own
-/// <see cref="IInvocationContext"/> with this <see cref="IConnection"/> attached.
+/// <see cref="IInvocationContext"/> with this <see cref="IInvocationConnection"/> attached.
 /// </remarks>
-public interface IConnection {
+public interface IInvocationConnection {
 
 	/// <summary>Unique identifier assigned by the source adapter at upgrade.</summary>
 	/// <remarks>

@@ -22,12 +22,12 @@ public interface IConnectionLifecycle {
 	/// <c>IUserStateAccessor</c> and other ambient consumers work normally inside the
 	/// hook. See ADR-0002 transport-adapter invariant #7.
 	/// </remarks>
-	ValueTask<bool> OnConnectedAsync(IConnection connection, CancellationToken cancellationToken);
+	ValueTask<bool> OnConnectedAsync(IInvocationConnection connection, CancellationToken cancellationToken);
 
 	/// <summary>
 	/// Called after the adapter detects a disconnect, before connection resources are
 	/// disposed. Exceptions are absorbed by the framework.
 	/// </summary>
-	ValueTask OnDisconnectedAsync(IConnection connection, CancellationToken cancellationToken);
+	ValueTask OnDisconnectedAsync(IInvocationConnection connection, CancellationToken cancellationToken);
 
 }

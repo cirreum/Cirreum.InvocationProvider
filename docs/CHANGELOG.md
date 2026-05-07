@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Renamed `IConnection` → `IInvocationConnection`** (in `Cirreum.Invocation.Connections`). The original name was too generic and conflicted conceptually with `Microsoft.AspNetCore.Connections.ConnectionContext`, SignalR's `HubConnectionContext`, and other framework "connection" types. The new name explicitly signals "this is the Invocation framework's view of a long-lived connection," eliminating the confusion when read in isolation.
+- **Renamed `IConnectionOutbound` → `IConnectionSender`** (in `Cirreum.Invocation.Connections`). "Outbound" described direction but not action; "Sender" mirrors the `SendAsync` methods the interface exposes and reads as a concrete connection facet alongside `IConnectionLifecycle`. `IConnectionLifecycle` keeps its name.
+
+### Migration from 1.0.0
+
+Two single-token find/replace edits:
+
+- `IConnection` → `IInvocationConnection` (use whole-word matching to avoid touching the longer `IConnectionLifecycle` / `IConnectionSender` names)
+- `IConnectionOutbound` → `IConnectionSender`
+
+The `Cirreum.Invocation.Connections` namespace import is unchanged. No external consumers are known to exist for v1.0.0 yet — these renames were applied immediately after release while the package was still NuGet-indexing.
+
 ## [1.0.0] - 2026-05-07
 
 ### Added
@@ -26,7 +40,7 @@ The framework models **how things are invoked into the framework**. Each registe
 
 The types below describe persistent connections that host many invocations. They live in a dedicated sub-namespace because they apply only to long-lived invocation sources (SignalR, raw WebSocket, gRPC streaming) — apps using only HTTP never need to import them. Use cases on top of these primitives include realtime/streaming/notifications/voice — but the primitives themselves describe the connection role, not any specific use case.
 
-- `IConnection` — per-connection state for long-lived inbound connections that host many invocations: `ConnectionId`, `User`, `ConnectedAtUtc`, `Items`, `InvocationSource`, `Aborted`. Set on `IInvocationContext.Connection` for invocations from connection-oriented sources; `null` for stateless sources.
+- `IConnection` — per-connection state for long-lived inbound connections that host many invocations: `ConnectionId`, `User`, `ConnectedAtUtc`, `Items`, `InvocationSource`, `Aborted`. Set on `IInvocationContext.Connection` for invocations from connection-oriented sources; `null` for stateless sources. *(Renamed to `IInvocationConnection` in 1.0.1 — see Unreleased entry.)*
 - `IConnectionLifecycle` — App-side `OnConnectedAsync` / `OnDisconnectedAsync` hook.
 - `IConnectionOutbound` — server-initiated push primitive with overloads for raw payload sends and method-keyed sends.
 
@@ -51,12 +65,12 @@ Replaces the deprecated `Cirreum.Connections` v1.0.0. Type rename map:
 
 | `Cirreum.Connections` v1.0.0 | New home |
 |---|---|
-| `IRealtimeConnection` | `IConnection` (this package) |
+| `IRealtimeConnection` | `IConnection` (this package — renamed to `IInvocationConnection` in 1.0.1) |
 | `IRealtimeInvocation` | `IInvocationContext` (this package — unified per-invocation seam) |
 | `IRealtimeConnectionAccessor` | `IInvocationContextAccessor` (this package — single ambient seam) |
 | `IRealtimeInvocationAccessor` | (removed — single accessor) |
 | `RealtimeConnectionAccessor` | `InvocationContextAccessor` (this package) |
 | `RealtimeInvocationAccessor` | (removed) |
 | `IConnectionAuthLifecycle` | `IConnectionLifecycle` (this package) |
-| `IRealtimeOutbound` | renamed to `IConnectionOutbound` (this package, `Cirreum.Invocation.Connections` namespace); method-keyed overload added |
+| `IRealtimeOutbound` | renamed to `IConnectionSender` (this package, `Cirreum.Invocation.Connections` namespace — was `IConnectionOutbound` in 1.0.0; method-keyed overload added) |
 | `ConnectionContextKeys` | (removed — slot keys flow through `Cirreum.Security.AuthenticationContextKeys` in `Cirreum.Core`) |

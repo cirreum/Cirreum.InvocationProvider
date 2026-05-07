@@ -26,7 +26,7 @@ public interface IInvocationContext {
 	/// <summary>The authenticated principal for this invocation.</summary>
 	/// <remarks>
 	/// Immutable for the invocation's lifetime. For invocations from long-lived sources,
-	/// mirrors <see cref="IConnection.User"/> (set once at upgrade). For stateless sources,
+	/// mirrors <see cref="IInvocationConnection.User"/> (set once at upgrade). For stateless sources,
 	/// derived from the inbound request's authenticated principal.
 	/// </remarks>
 	ClaimsPrincipal User { get; }
@@ -37,7 +37,7 @@ public interface IInvocationContext {
 	/// and any framework slot whose lifetime is one invocation).
 	/// </summary>
 	/// <remarks>
-	/// Distinct dictionary from <see cref="Connection"/>'s <see cref="IConnection.Items"/>.
+	/// Distinct dictionary from <see cref="Connection"/>'s <see cref="IInvocationConnection.Items"/>.
 	/// Cleared (or simply discarded with the invocation) at invocation end. Mutation-safe
 	/// within a single invocation; not safe to share across invocations.
 	/// </remarks>
@@ -52,7 +52,7 @@ public interface IInvocationContext {
 	/// <summary>Cancellation tied to the invocation's lifetime.</summary>
 	/// <remarks>
 	/// For invocations from long-lived sources, also fires when
-	/// <see cref="IConnection.Aborted"/> fires.
+	/// <see cref="IInvocationConnection.Aborted"/> fires.
 	/// </remarks>
 	CancellationToken Aborted { get; }
 
@@ -67,6 +67,6 @@ public interface IInvocationContext {
 	/// The long-lived connection this invocation belongs to, or <see langword="null"/>
 	/// for stateless invocation sources (HTTP, gRPC unary, queue handlers).
 	/// </summary>
-	IConnection? Connection { get; }
+	IInvocationConnection? Connection { get; }
 
 }

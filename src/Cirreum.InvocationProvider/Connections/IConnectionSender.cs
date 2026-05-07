@@ -14,7 +14,7 @@ namespace Cirreum.Invocation.Connections;
 /// The source adapter handles underlying socket synchronization. Apps do not need to lock.
 /// </para>
 /// </remarks>
-public interface IConnectionOutbound {
+public interface IConnectionSender {
 
 	/// <summary>Send a payload over the current connection.</summary>
 	ValueTask SendAsync<T>(T payload, CancellationToken cancellationToken = default);

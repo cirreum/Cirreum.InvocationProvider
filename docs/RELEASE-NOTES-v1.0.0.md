@@ -40,7 +40,7 @@ public interface IInvocationContext {
     IServiceProvider Services { get; }
     CancellationToken Aborted { get; }
     string InvocationSource { get; }
-    IConnection? Connection { get; }
+    IInvocationConnection? Connection { get; }
 }
 
 public interface IInvocationContextAccessor {
@@ -79,7 +79,7 @@ public abstract class InvocationProviderRegistrar<TSettings, TInstanceSettings>
 Persistent-connection sub-types. Apply only to long-lived invocation sources (SignalR, raw WebSocket, gRPC streaming). Apps using only stateless sources (HTTP, queue triggers) never need to import this namespace.
 
 ```csharp
-public interface IConnection {
+public interface IInvocationConnection {
     string ConnectionId { get; }
     ClaimsPrincipal User { get; }
     DateTimeOffset ConnectedAtUtc { get; }
@@ -89,8 +89,8 @@ public interface IConnection {
 }
 
 public interface IConnectionLifecycle {
-    ValueTask<bool> OnConnectedAsync(IConnection connection, CancellationToken cancellationToken);
-    ValueTask OnDisconnectedAsync(IConnection connection, CancellationToken cancellationToken);
+    ValueTask<bool> OnConnectedAsync(IInvocationConnection connection, CancellationToken cancellationToken);
+    ValueTask OnDisconnectedAsync(IInvocationConnection connection, CancellationToken cancellationToken);
 }
 
 public interface IConnectionOutbound {
@@ -154,7 +154,7 @@ Type rename map:
 
 | `Cirreum.Connections` v1.0.0 | `Cirreum.InvocationProvider` v1.0.0 |
 |---|---|
-| `IRealtimeConnection` | `IConnection` (in `Cirreum.Invocation.Connections`) |
+| `IRealtimeConnection` | `IInvocationConnection` (in `Cirreum.Invocation.Connections`) |
 | `IRealtimeInvocation` | `IInvocationContext` (unified per-message seam) |
 | `IRealtimeConnectionAccessor` | `IInvocationContextAccessor` (single ambient seam) |
 | `IRealtimeInvocationAccessor` | (removed — single accessor) |
@@ -180,7 +180,7 @@ Pre-`1.0.0`, the framework's layer model named only one axis (host environment: 
 
 > **Persistent-connection state lives in a sub-namespace because it applies only to long-lived sources.**
 
-`IConnection`, `IConnectionLifecycle`, and `IConnectionOutbound` describe persistent connections that host many invocations. Apps using only stateless sources never need to know they exist. Splitting into `Cirreum.Invocation.Connections` makes the boundary explicit; the type names are role-descriptive (Connection-prefixed) rather than use-case-flavored (Realtime-/Streaming-prefixed) — the same connection primitives serve realtime, streaming, notifications, voice, and any other use case built on persistent inbound connections.
+`IInvocationConnection`, `IConnectionLifecycle`, and `IConnectionOutbound` describe persistent connections that host many invocations. Apps using only stateless sources never need to know they exist. Splitting into `Cirreum.Invocation.Connections` makes the boundary explicit; the type names are role-descriptive (Connection-prefixed) rather than use-case-flavored (Realtime-/Streaming-prefixed) — the same connection primitives serve realtime, streaming, notifications, voice, and any other use case built on persistent inbound connections.
 
 > **Foundational L2 packages don't cross-reference.**
 
@@ -206,7 +206,7 @@ L3 per-source registrars (`Cirreum.Invocation.SignalR`, `.WebSockets`) and L5 ru
 
 - **No external consumers** for `Cirreum.Connections` v1.0.0 → no compatibility shims. The rename is a clean source break with the package deprecated and unlisted on NuGet.
 - **`InvocationContextAccessor` is registered as singleton** (matches `IHttpContextAccessor` convention). Per-flow isolation comes from `AsyncLocal<T>`, not from DI scope. The accessor instance has no per-request mutable state.
-- **Two-namespace organization** keeps simple consumers from importing types they don't need. HTTP-only apps see `Cirreum.Invocation`. Long-lived-source consumers add `using Cirreum.Invocation.Connections;` for `IConnection` / `IConnectionLifecycle` / `IConnectionOutbound`.
+- **Two-namespace organization** keeps simple consumers from importing types they don't need. HTTP-only apps see `Cirreum.Invocation`. Long-lived-source consumers add `using Cirreum.Invocation.Connections;` for `IInvocationConnection` / `IConnectionLifecycle` / `IConnectionOutbound`.
 - **`Items`-bag access pattern**: L3 framework code (e.g. `UserAccessor`, the role claims transformer) uses raw dictionary access against `AuthenticationContextKeys.*`. L4+ consumers and app-side code use the typed extensions shipped from `Cirreum.Runtime.InvocationProvider`. The split is intentional: the L3 sites are foundational and centralized; the typed extensions exist to prevent SCATTERED dictionary access across many higher-layer call sites.
 
 ---
