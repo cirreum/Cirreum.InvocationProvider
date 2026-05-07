@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-05-07
+
 ### Changed
 
 - **Renamed `IConnection` → `IInvocationConnection`** (in `Cirreum.Invocation.Connections`). The original name was too generic and conflicted conceptually with `Microsoft.AspNetCore.Connections.ConnectionContext`, SignalR's `HubConnectionContext`, and other framework "connection" types. The new name explicitly signals "this is the Invocation framework's view of a long-lived connection," eliminating the confusion when read in isolation.
