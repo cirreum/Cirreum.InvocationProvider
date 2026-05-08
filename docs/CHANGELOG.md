@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-05-08
+
 ### Added
 
 - **`DisconnectInfo` record** (in `Cirreum.Invocation.Connections`) — carries per-disconnect circumstances surfaced to lifecycle hooks: `WasGraceful`, `Exception?`, and a free-form `Reason` string. Source adapters populate it from the underlying transport's disconnect signal (SignalR `Exception?` parameter, WebSocket close status, gRPC status code).
