@@ -24,10 +24,14 @@ public interface IInvocationConnection {
 	/// </remarks>
 	string ConnectionId { get; }
 
-	/// <summary>The authenticated principal resolved at upgrade. Immutable post-upgrade.</summary>
+	/// <summary>
+	/// The authenticated principal resolved at upgrade. Immutable post-upgrade.
+	/// </summary>
 	ClaimsPrincipal User { get; }
 
-	/// <summary>UTC timestamp of upgrade.</summary>
+	/// <summary>
+	/// UTC timestamp of upgrade.
+	/// </summary>
 	DateTimeOffset ConnectedAtUtc { get; }
 
 	/// <summary>

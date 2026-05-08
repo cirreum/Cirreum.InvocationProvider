@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`DisconnectInfo` record** (in `Cirreum.Invocation.Connections`) — carries per-disconnect circumstances surfaced to lifecycle hooks: `WasGraceful`, `Exception?`, and a free-form `Reason` string. Source adapters populate it from the underlying transport's disconnect signal (SignalR `Exception?` parameter, WebSocket close status, gRPC status code).
+
+### Changed
+
+- **`IConnectionLifecycle.OnDisconnectedAsync` signature** now accepts a `DisconnectInfo info` parameter between the connection and the cancellation token. Apps that need to react differently to graceful vs. abrupt disconnects, log exception details, or audit the disconnect reason can now do so through a typed seam without depending on transport-native APIs.
+
+### Migration from 1.0.1
+
+Single-token addition to any `IConnectionLifecycle` implementation:
+
+```diff
+- public ValueTask OnDisconnectedAsync(IInvocationConnection connection, CancellationToken ct) {
++ public ValueTask OnDisconnectedAsync(IInvocationConnection connection, DisconnectInfo info, CancellationToken ct) {
+      // ... existing body unchanged; new `info` is available if you want it
+  }
+```
+
+No external consumers exist for v1.0.1's `IConnectionLifecycle` — the first source adapter (`Cirreum.Invocation.SignalR`) hadn't shipped yet at the time of this change. If you're an early framework consumer who hand-implemented the interface, the migration is mechanical.
+
 ## [1.0.1] - 2026-05-07
 
 ### Changed
