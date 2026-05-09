@@ -61,4 +61,24 @@ public interface IInvocationConnection {
 	/// </summary>
 	CancellationToken Aborted { get; }
 
+	/// <summary>
+	/// Aborts the connection. Cancels <see cref="Aborted"/>, signaling all in-flight
+	/// reads, receive loops, and pending invocations on this connection to terminate.
+	/// The source adapter then runs its disconnect path (closing the underlying transport
+	/// and dispatching <see cref="IConnectionLifecycle.OnDisconnectedAsync"/> hooks).
+	/// </summary>
+	/// <remarks>
+	/// <para>
+	/// Idempotent — calling on an already-aborted connection is a no-op. Returns
+	/// immediately without waiting for the disconnect path to complete; the actual
+	/// teardown is observable via <see cref="IConnectionLifecycle.OnDisconnectedAsync"/>.
+	/// </para>
+	/// <para>
+	/// Use cases: server-side timeout, app-level kick (auth lapsed mid-connection),
+	/// or a handler that orchestrates multiple sockets and needs to terminate the
+	/// inbound transport when an outbound dependency drops.
+	/// </para>
+	/// </remarks>
+	void Abort();
+
 }
