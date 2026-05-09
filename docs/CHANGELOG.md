@@ -11,9 +11,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **`IInvocationConnection.Abort()`** — explicit termination primitive available on every long-lived connection (SignalR, WebSocket, future gRPC streaming). Cancels `Aborted`, drains in-flight reads, and triggers the source adapter's disconnect path. Use cases include server-side timeout, app-level kick (auth lapsed mid-connection), and handlers orchestrating multiple sockets that need to terminate the inbound transport when an outbound dependency drops. Idempotent.
 
-### Breaking
+### Changed
 
-- **`IInvocationConnection`** gains a required `void Abort()` member. External implementers (rare — this interface is normally implemented only by transport adapters) must add an implementation. Framework-owned implementations (`SignalRConnection`, `WebSocketConnection`) ship updates in coordinated patches/minor releases.
+- **`IInvocationConnection`** gains a required `void Abort()` member. This interface is intended to be implemented only by transport adapters (`SignalRConnection`, `WebSocketConnection`, future gRPC streaming connection); framework-owned implementations ship coordinated updates alongside this release. Apps consuming `IInvocationConnection` are unaffected — only implementers need to add the method.
 
 ## [1.1.0] - 2026-05-08
 
