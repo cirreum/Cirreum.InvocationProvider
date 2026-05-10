@@ -70,11 +70,11 @@ public sealed class GenerateReportHandler(
 
 ---
 
-## What's removed
+## What's changed
 
-### `IConnectionSender`
+### `IConnectionSender` consolidated into `IInvocationConnection.SendAsync`
 
-Deleted. Cross-cutting code that previously injected `IConnectionSender` now reads the connection from the ambient `IInvocationContextAccessor` and calls `SendAsync` directly — same target, one indirection fewer.
+The standalone `IConnectionSender` interface is gone — its two `SendAsync<T>` overloads now live on `IInvocationConnection` itself (see "What's new"). Same operation, more natural shape; cross-cutting code reads `accessor.Current?.Connection` and calls `SendAsync` directly. Captured here as a reshape rather than a removal: the surface didn't disappear, it moved one interface up. Treated as Minor under the same window-of-no-consumers, framework-owned-implementer-set precedent as the 1.1.0 (`OnDisconnectedAsync` signature) and 1.2.0 (`Abort()` interface widening) cascades — `IConnectionSender` is a v1.0.x pre-adoption surface with no external consumers yet.
 
 Migration:
 
@@ -105,7 +105,7 @@ Same framework-owned-implementer-set reasoning as the `1.1.0` `IConnectionLifecy
 
 - **Zero external implementers exist** for `IInvocationConnection`. Only transport adapters (`SignalRConnection`, `WebSocketConnection`, future gRPC streaming connection) implement it; all are framework-owned and ship coordinated updates alongside this release.
 - **`IConnectionSender` consumers are app-side**, not implementers. The migration is mechanical (one find/replace and ~3 lines per call site).
-- **Bumping to 2.0.0 would overstate the impact** — `MIGRATION-v2.md` ceremony, suggesting to readers that something fundamental changed. Nothing fundamental changed; one redundant abstraction was removed.
+- **Bumping to 2.0.0 would overstate the impact** — `MIGRATION-v2.md` ceremony, suggesting to readers that something fundamental changed. Nothing fundamental changed; one redundant abstraction was reshaped onto a more natural interface.
 
 If any external implementer of `IInvocationConnection` surfaces, the migration is two method additions — see the per-adapter examples in the L3 release notes.
 

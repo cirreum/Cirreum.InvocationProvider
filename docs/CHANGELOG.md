@@ -7,19 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [1.3.0] - 2026-05-09
-
 ### Added
 
 - **`IInvocationConnection.SendAsync<T>` overloads (2)** — server-initiated push of a typed payload, lifted onto the connection itself. The no-method overload sends the payload through the transport's natural mechanism; the keyed overload addresses the payload to a specific method/event name. Serialization is transport-specific: SignalR routes through the configured `IHubProtocol` (JSON or MessagePack); WebSocket JSON-serializes using the active handler's `SerializerOptions` and sends as a Text frame (for the keyed overload, wraps in a `{ method, payload }` envelope). Cross-cutting code that previously injected `IConnectionSender` now reads `accessor.Current?.Connection` and calls `SendAsync` directly — one hop fewer through DI, no separate service to resolve, no scoping ambiguity. Source adapters (`SignalRConnection`, `WebSocketConnection`) ship coordinated patches alongside this release.
 
-### Removed
-
-- **`IConnectionSender`** — collapsed into `IInvocationConnection.SendAsync`. The split between connection-state-accessor and connection-send-service was modeled after the Authorization track's `IAuthorizationContextAccessor` + `IAuthorizationService` pair, but the analogy didn't hold: auth services have real behavior (rule evaluation, policy resolution); the connection sender was a thin DI-resolved wrapper that did one thing — read `IInvocationContextAccessor.Current.Connection` and forward to it. Every native long-lived transport puts Send on the connection-shaped object directly (SignalR `HubCallerContext` → `Clients.Caller.SendAsync`; ASP.NET `WebSocket.SendAsync`; gRPC `IServerStreamWriter<T>.WriteAsync`); the framework now matches that shape.
-
 ### Changed
 
 - **`IInvocationConnection`** gains two required `SendAsync<T>` members. As with the 1.2.0 `Abort()` addition, this interface is intended to be implemented only by transport adapters (`SignalRConnection`, `WebSocketConnection`, future gRPC streaming connection); framework-owned implementations ship coordinated updates alongside this release. Apps consuming `IInvocationConnection` are unaffected by the interface widening — only implementers need the new members.
+
+- **`IConnectionSender` consolidated into `IInvocationConnection.SendAsync`** — the standalone `IConnectionSender` interface is gone; its two `SendAsync<T>` overloads became the new members on `IInvocationConnection` (see Added). The split between connection-state-accessor and connection-send-service was modeled after the Authorization track's `IAuthorizationContextAccessor` + `IAuthorizationService` pair, but the analogy didn't hold: auth services have real behavior (rule evaluation, policy resolution); the connection sender was a thin DI-resolved wrapper that did one thing — read `IInvocationContextAccessor.Current.Connection` and forward to it. Every native long-lived transport puts Send on the connection-shaped object directly (SignalR `HubCallerContext` → `Clients.Caller.SendAsync`; ASP.NET `WebSocket.SendAsync`; gRPC `IServerStreamWriter<T>.WriteAsync`); the framework now matches that shape.
+
+  This is reshape-not-removal in spirit: the same operation lives on, on a more natural interface. Same window-of-no-consumers reasoning that motivated the 1.1.0 (`OnDisconnectedAsync` signature) and 1.2.0 (`Abort()` interface widening) coordinated cascades — `IConnectionSender` was a v1.0.x pre-adoption surface, no apps depend on it externally yet, and the L3 source adapters ship coordinated impls in the same wave. Captured here as `### Changed` (not `### Removed`) to honor SemVer's reservation of removal for major versions; the consolidation is a Minor under the framework-owned-implementer-set + pre-adoption-window precedent already set.
 
 ### Migration from 1.2.0
 
