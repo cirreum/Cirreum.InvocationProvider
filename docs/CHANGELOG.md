@@ -7,6 +7,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-05-09
+
+### Added
+
+- **`IInvocationConnection.SendAsync<T>` overloads (2)** — server-initiated push of a typed payload, lifted onto the connection itself. The no-method overload sends the payload through the transport's natural mechanism; the keyed overload addresses the payload to a specific method/event name. Serialization is transport-specific: SignalR routes through the configured `IHubProtocol` (JSON or MessagePack); WebSocket JSON-serializes using the active handler's `SerializerOptions` and sends as a Text frame (for the keyed overload, wraps in a `{ method, payload }` envelope). Cross-cutting code that previously injected `IConnectionSender` now reads `accessor.Current?.Connection` and calls `SendAsync` directly — one hop fewer through DI, no separate service to resolve, no scoping ambiguity. Source adapters (`SignalRConnection`, `WebSocketConnection`) ship coordinated patches alongside this release.
+
+### Removed
+
+- **`IConnectionSender`** — collapsed into `IInvocationConnection.SendAsync`. The split between connection-state-accessor and connection-send-service was modeled after the Authorization track's `IAuthorizationContextAccessor` + `IAuthorizationService` pair, but the analogy didn't hold: auth services have real behavior (rule evaluation, policy resolution); the connection sender was a thin DI-resolved wrapper that did one thing — read `IInvocationContextAccessor.Current.Connection` and forward to it. Every native long-lived transport puts Send on the connection-shaped object directly (SignalR `HubCallerContext` → `Clients.Caller.SendAsync`; ASP.NET `WebSocket.SendAsync`; gRPC `IServerStreamWriter<T>.WriteAsync`); the framework now matches that shape.
+
+### Changed
+
+- **`IInvocationConnection`** gains two required `SendAsync<T>` members. As with the 1.2.0 `Abort()` addition, this interface is intended to be implemented only by transport adapters (`SignalRConnection`, `WebSocketConnection`, future gRPC streaming connection); framework-owned implementations ship coordinated updates alongside this release. Apps consuming `IInvocationConnection` are unaffected by the interface widening — only implementers need the new members.
+
+### Migration from 1.2.0
+
+Apps that injected `IConnectionSender` should switch to reading the connection from the ambient `IInvocationContextAccessor`:
+
+```diff
+  public sealed class GenerateReportHandler(
+-     IInvocationContextAccessor accessor,
+-     IConnectionSender sender) : ICommandHandler<GenerateReportCommand> {
++     IInvocationContextAccessor accessor) : ICommandHandler<GenerateReportCommand> {
+
+      public async ValueTask<Result> Handle(GenerateReportCommand cmd, CancellationToken ct) {
+-         var canPush = accessor.Current?.Connection is not null;
+-         if (canPush) await sender.SendAsync("Progress", new { Percent = 0 }, ct);
++         var connection = accessor.Current?.Connection;
++         if (connection is not null) await connection.SendAsync("Progress", new { Percent = 0 }, ct);
+          // ... work ...
+-         if (canPush) await sender.SendAsync("Progress", new { Percent = 100 }, ct);
++         if (connection is not null) await connection.SendAsync("Progress", new { Percent = 100 }, ct);
+          return Result.Success(/* ... */);
+      }
+  }
+```
+
+Mechanical, ~3 lines per call site. Apps using `WebSocketHandler.SendAsync(...)` from inside the handler are unaffected — that surface stays.
+
 ## [1.2.0] - 2026-05-09
 
 ### Added

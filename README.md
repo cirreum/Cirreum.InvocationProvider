@@ -23,7 +23,7 @@ You can think of `Cirreum.InvocationProvider` as `Cirreum.Core.Server` in spirit
 
 ## Two roles in one package
 
-1. **Foundational L2 abstractions for the inbound seam** — `IInvocationContext`, `IInvocationContextAccessor`, `InvocationContextAccessor` (default AsyncLocal impl), `InvocationSources` in the root `Cirreum.Invocation` namespace. The persistent-connection sub-types (`IInvocationConnection`, `IConnectionLifecycle`, `IConnectionSender`) live in the `Cirreum.Invocation.Connections` sub-namespace because they apply only to long-lived invocation sources. These are referenced by `Cirreum.Services.Server` and the spine — non-pluggable, always-on framework foundation.
+1. **Foundational L2 abstractions for the inbound seam** — `IInvocationContext`, `IInvocationContextAccessor`, `InvocationContextAccessor` (default AsyncLocal impl), `InvocationSources` in the root `Cirreum.Invocation` namespace. The persistent-connection sub-types (`IInvocationConnection`, `IConnectionLifecycle`, `DisconnectInfo`) live in the `Cirreum.Invocation.Connections` sub-namespace because they apply only to long-lived invocation sources. These are referenced by `Cirreum.Services.Server` and the spine — non-pluggable, always-on framework foundation.
 
 2. **Provider-track abstractions for pluggable invocation sources** — `InvocationProviderRegistrar` abstract base + settings hierarchy. L3 per-source packages (`Cirreum.Invocation.SignalR`, `.WebSockets`, future `.gRPC`) derive from these to plug new invocation sources in alongside the framework default (HTTP).
 
@@ -36,9 +36,9 @@ You can think of `Cirreum.InvocationProvider` as `Cirreum.Core.Server` in spirit
 | `InvocationSources` | Const class with framework-known source values |
 | `InvocationProviderRegistrar<,>` | Abstract base for L3 per-source registrars (two-phase: `Register` + `Map`) |
 | `InvocationProviderSettings<>` / `InvocationProviderInstanceSettings` | Settings hierarchy bound from `Cirreum:Invocation:Providers:{Source}:Instances:{key}` |
-| `IInvocationConnection (Cirreum.Invocation.Connections)` | Per-connection state for long-lived sources |
+| `IInvocationConnection (Cirreum.Invocation.Connections)` | Per-connection state for long-lived sources; exposes `Abort()` and typed `SendAsync<T>` for server-initiated push |
 | `IConnectionLifecycle (Cirreum.Invocation.Connections)` | App-side `OnConnectedAsync` / `OnDisconnectedAsync` hook |
-| `IConnectionSender (Cirreum.Invocation.Connections)` | Server-initiated push primitive (`SendAsync`) |
+| `DisconnectInfo (Cirreum.Invocation.Connections)` | Adapter-populated disconnect circumstances passed to `OnDisconnectedAsync` |
 
 ## What lives elsewhere
 

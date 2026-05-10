@@ -81,4 +81,44 @@ public interface IInvocationConnection {
 	/// </remarks>
 	void Abort();
 
+	/// <summary>
+	/// Server-initiated push of a typed payload over this connection. Fire-and-forget;
+	/// no expected response.
+	/// </summary>
+	/// <remarks>
+	/// <para>
+	/// Multi-producer safe. Within a single producer, sends preserve issue order. Across
+	/// producers, ordering is unspecified — apps that need cross-producer order serialize
+	/// their producers themselves (e.g., shared queue + single drain task).
+	/// </para>
+	/// <para>
+	/// Serialization is transport-specific. For SignalR the payload flows through the
+	/// configured <c>IHubProtocol</c> (JSON or MessagePack). For raw WebSocket the
+	/// payload is JSON-serialized using the active handler's <c>SerializerOptions</c>
+	/// (apps override that property to plug in a source-generated
+	/// <c>JsonTypeInfoResolver</c> for AOT/trim-friendly apps) and sent as a Text frame.
+	/// </para>
+	/// <para>
+	/// For WebSocket apps that need to bypass JSON serialization and write raw frames
+	/// (binary protocols, audio, pre-serialized payloads), downcast to
+	/// <c>IWebSocketConnection</c> and call <c>SendBytesAsync</c>.
+	/// </para>
+	/// </remarks>
+	ValueTask SendAsync<T>(T payload, CancellationToken cancellationToken = default);
+
+	/// <summary>
+	/// Server-initiated push of a typed payload addressed to a specific method/event
+	/// name. Used by transports that route by method-keyed receive handlers (SignalR
+	/// <c>HubConnection.On&lt;T&gt;</c>; WebSocket apps that implement their own
+	/// method-dispatch protocol on top of the wire format).
+	/// </summary>
+	/// <remarks>
+	/// Same fire-and-forget, multi-producer-safe semantics as
+	/// <see cref="SendAsync{T}(T, CancellationToken)"/>. For SignalR, <paramref name="method"/>
+	/// is the receive-handler name registered by the client (<c>connection.on(method, ...)</c>).
+	/// For WebSocket, the framework wraps the payload in a
+	/// <c>{ "method": "...", "payload": ... }</c> JSON envelope sent as a Text frame.
+	/// </remarks>
+	ValueTask SendAsync<T>(string method, T payload, CancellationToken cancellationToken = default);
+
 }
