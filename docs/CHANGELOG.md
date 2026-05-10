@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-05-09
+
 ### Added
 
 - **`IInvocationConnection.SendAsync<T>` overloads (2)** — server-initiated push of a typed payload, lifted onto the connection itself. The no-method overload sends the payload through the transport's natural mechanism; the keyed overload addresses the payload to a specific method/event name. Serialization is transport-specific: SignalR routes through the configured `IHubProtocol` (JSON or MessagePack); WebSocket JSON-serializes using the active handler's `SerializerOptions` and sends as a Text frame (for the keyed overload, wraps in a `{ method, payload }` envelope). Cross-cutting code that previously injected `IConnectionSender` now reads `accessor.Current?.Connection` and calls `SendAsync` directly — one hop fewer through DI, no separate service to resolve, no scoping ambiguity. Source adapters (`SignalRConnection`, `WebSocketConnection`) ship coordinated patches alongside this release.
